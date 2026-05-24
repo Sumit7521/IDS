@@ -26,6 +26,15 @@ feature_columns = joblib.load(
     "feature_columns.pkl"
 )
 
+# Load feature configs for RF and CNN
+rf_feature_columns = joblib.load(
+    "rf_feature_columns.pkl"
+)
+
+cnn_feature_columns = joblib.load(
+    "cnn_feature_columns.pkl"
+)
+
 # =========================================================
 # LOAD HYBRID XGBOOST MODEL
 # =========================================================
@@ -515,6 +524,12 @@ def predict_randomforest(data: NetworkData):
             data
         )
 
+        # Reindex to exactly the 110 features RF expects
+        rf_tree_input = tree_input.reindex(
+            columns=rf_feature_columns,
+            fill_value=0
+        )
+
         # Lazy load Random Forest model
         random_forest_model = joblib.load(
             "random_forest_smote_model.joblib"
@@ -524,7 +539,7 @@ def predict_randomforest(data: NetworkData):
 
             random_forest_model,
 
-            tree_input
+            rf_tree_input
 
         )
 
@@ -552,15 +567,25 @@ def predict_cnn(data: NetworkData):
             data
         )
 
-        # Scale features
+        # Scale features (expects 120 features input)
         scaled_input = scaler.transform(
             tree_input
         )
 
-        # Reshape to (1, num_features, 1) for CNN
-        cnn_input = scaled_input.reshape(
-            scaled_input.shape[0],
-            scaled_input.shape[1],
+        # Convert to DataFrame to reindex to exactly the 118 columns CNN expects
+        scaled_df = pd.DataFrame(
+            scaled_input,
+            columns=feature_columns
+        )
+        cnn_scaled_input = scaled_df.reindex(
+            columns=cnn_feature_columns,
+            fill_value=0
+        ).values
+
+        # Reshape to (1, 118, 1) for CNN
+        cnn_input = cnn_scaled_input.reshape(
+            cnn_scaled_input.shape[0],
+            cnn_scaled_input.shape[1],
             1
         )
 
