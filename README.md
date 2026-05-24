@@ -1,3 +1,13 @@
+---
+title: Cyber IDS API
+emoji: 🛡️
+colorFrom: red
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Multi-Model Intrusion Detection System (IDS) API
 
 A production-ready, highly optimized **Intrusion Detection System (IDS)** powered by a suite of Machine Learning and Deep Learning models. It classifies network traffic records from the **NSL-KDD dataset** as `normal` or one of many cyber attack categories (DoS, Probe, R2L, U2R).
