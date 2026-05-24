@@ -48,9 +48,7 @@ hybrid_xgb_model.load_model(
 # LOAD STANDALONE XGBOOST MODEL
 # =========================================================
 
-standalone_xgb_model = XGBClassifier()
-
-standalone_xgb_model.load_model(
+standalone_xgb_model = joblib.load(
     "xgb_model_standalone.pkl"
 )
 
@@ -58,9 +56,7 @@ standalone_xgb_model.load_model(
 # LOAD CATBOOST MODEL
 # =========================================================
 
-catboost_model = CatBoostClassifier()
-
-catboost_model.load_model(
+catboost_model = joblib.load(
     "catboost_model_standalone.pkl"
 )
 
