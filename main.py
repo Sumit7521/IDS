@@ -36,6 +36,10 @@ hybrid_xgb_model.load_model(
     "xgb_model.json"
 )
 
+# Load SHAP Explainer for Hybrid model at startup
+import shap
+hybrid_shap_explainer = shap.TreeExplainer(hybrid_xgb_model)
+
 # =========================================================
 # LOAD STANDALONE XGBOOST MODEL
 # =========================================================
@@ -361,6 +365,7 @@ def predict_hybrid(data: NetworkData):
             axis=1
         )
 
+        # Make Prediction
         result = make_prediction(
 
             hybrid_xgb_model,
@@ -368,6 +373,34 @@ def predict_hybrid(data: NetworkData):
             fused_features
 
         )
+
+        # Compute SHAP explanations
+        prediction = hybrid_xgb_model.predict(fused_features)
+        predicted_class_idx = int(prediction[0])
+
+        shap_values = hybrid_shap_explainer.shap_values(fused_features)
+
+        # Extract SHAP values for the predicted class
+        # shap_values shape: (1, 168, 5)
+        shap_vals_class = shap_values[0, :, predicted_class_idx]
+
+        # Feature Names
+        original_feature_names = list(feature_columns)
+        latent_feature_names = [f"latent_{i}" for i in range(48)]
+        all_feature_names = original_feature_names + latent_feature_names
+
+        # Map to list and sort by absolute impact
+        feature_importance = [
+            {"feature": all_feature_names[i], "shap_value": round(float(shap_vals_class[i]), 6)}
+            for i in range(len(all_feature_names))
+        ]
+        feature_importance = sorted(feature_importance, key=lambda x: abs(x["shap_value"]), reverse=True)
+        top_10_shap = feature_importance[:10]
+
+        result["explanation"] = {
+            "base_value": round(float(hybrid_shap_explainer.expected_value[predicted_class_idx]), 6),
+            "top_features": top_10_shap
+        }
 
         # Free memory
         del encoder
