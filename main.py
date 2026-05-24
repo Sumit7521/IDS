@@ -27,14 +27,6 @@ feature_columns = joblib.load(
 )
 
 # =========================================================
-# LOAD ENCODER MODEL
-# =========================================================
-
-encoder = load_model(
-    "encoder_model.keras"
-)
-
-# =========================================================
 # LOAD HYBRID XGBOOST MODEL
 # =========================================================
 
@@ -53,43 +45,11 @@ standalone_xgb_model = joblib.load(
 )
 
 # =========================================================
-# LOAD CATBOOST MODEL
-# =========================================================
-
-catboost_model = joblib.load(
-    "catboost_model_standalone.pkl"
-)
-
-# =========================================================
 # LOAD ADABOOST MODEL
 # =========================================================
 
 adaboost_model = joblib.load(
     "adaboost_model_standalone.pkl"
-)
-
-# =========================================================
-# LOAD RANDOM FOREST MODEL
-# =========================================================
-
-random_forest_model = joblib.load(
-    "random_forest_smote_model.joblib"
-)
-
-# =========================================================
-# LOAD CNN MODEL
-# =========================================================
-
-cnn_model = load_model(
-    "cnn_ids_model.keras"
-)
-
-# =========================================================
-# LOAD KNN MODEL
-# =========================================================
-
-knn_model = joblib.load(
-    "knn_model.joblib"
 )
 
 # =========================================================
@@ -108,7 +68,7 @@ naive_bayes_model = joblib.load(
     "naive_bayes_model.joblib"
 )
 
-print("ALL MODELS LOADED SUCCESSFULLY!")
+print("BASE MODELS LOADED SUCCESSFULLY!")
 
 # =========================================================
 # FASTAPI APP
@@ -375,6 +335,11 @@ def predict_hybrid(data: NetworkData):
             data
         )
 
+        # Lazy load encoder model
+        encoder = load_model(
+            "encoder_model.keras"
+        )
+
         # Generate Encoded Features
         encoded_features = encoder.predict(
             scaled_input,
@@ -396,13 +361,19 @@ def predict_hybrid(data: NetworkData):
             axis=1
         )
 
-        return make_prediction(
+        result = make_prediction(
 
             hybrid_xgb_model,
 
             fused_features
 
         )
+
+        # Free memory
+        del encoder
+        import gc; gc.collect()
+
+        return result
 
     except Exception as e:
 
@@ -450,13 +421,24 @@ def predict_catboost(data: NetworkData):
             data
         )
 
-        return make_prediction(
+        # Lazy load CatBoost model
+        catboost_model = joblib.load(
+            "catboost_model_standalone.pkl"
+        )
+
+        result = make_prediction(
 
             catboost_model,
 
             tree_input
 
         )
+
+        # Free memory
+        del catboost_model
+        import gc; gc.collect()
+
+        return result
 
     except Exception as e:
 
@@ -500,13 +482,24 @@ def predict_randomforest(data: NetworkData):
             data
         )
 
-        return make_prediction(
+        # Lazy load Random Forest model
+        random_forest_model = joblib.load(
+            "random_forest_smote_model.joblib"
+        )
+
+        result = make_prediction(
 
             random_forest_model,
 
             tree_input
 
         )
+
+        # Free memory
+        del random_forest_model
+        import gc; gc.collect()
+
+        return result
 
     except Exception as e:
 
@@ -542,13 +535,24 @@ def predict_cnn(data: NetworkData):
             np.float32
         )
 
-        return make_keras_prediction(
+        # Lazy load CNN model
+        cnn_model = load_model(
+            "cnn_ids_model.keras"
+        )
+
+        result = make_keras_prediction(
 
             cnn_model,
 
             cnn_input
 
         )
+
+        # Free memory
+        del cnn_model
+        import gc; gc.collect()
+
+        return result
 
     except Exception as e:
 
@@ -567,13 +571,24 @@ def predict_knn(data: NetworkData):
             data
         )
 
-        return make_prediction(
+        # Lazy load KNN model
+        knn_model = joblib.load(
+            "knn_model.joblib"
+        )
+
+        result = make_prediction(
 
             knn_model,
 
             scaled_input
 
         )
+
+        # Free memory
+        del knn_model
+        import gc; gc.collect()
+
+        return result
 
     except Exception as e:
 
