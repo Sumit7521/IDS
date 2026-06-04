@@ -766,7 +766,7 @@ def predict_mlp(data: NetworkData):
 
     try:
 
-        scaled_input = preprocess_linear(
+        scaled_input = preprocess_hybrid(
             data
         )
 
