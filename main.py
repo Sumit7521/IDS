@@ -15,7 +15,7 @@ from catboost import CatBoostClassifier
 # =========================================================
 
 scaler = joblib.load(
-    "scaler.pkl"
+    "standard_scaler.pkl"
 )
 
 label_encoder = joblib.load(
@@ -53,6 +53,7 @@ hybrid_shap_explainer = shap.TreeExplainer(hybrid_xgb_model)
 # LOAD STANDALONE XGBOOST MODEL
 # =========================================================
 
+
 standalone_xgb_model = joblib.load(
     "xgb_model_standalone.pkl"
 )
@@ -70,7 +71,7 @@ adaboost_model = joblib.load(
 # =========================================================
 
 svm_model = joblib.load(
-    "svm_model.joblib"
+    "svm_model.pkl"
 )
 
 # =========================================================
@@ -78,7 +79,7 @@ svm_model = joblib.load(
 # =========================================================
 
 naive_bayes_model = joblib.load(
-    "naive_bayes_model.joblib"
+    "naive_bayes_model.pkl"
 )
 
 print("BASE MODELS LOADED SUCCESSFULLY!")
@@ -631,7 +632,7 @@ def predict_knn(data: NetworkData):
 
         # Lazy load KNN model
         knn_model = joblib.load(
-            "knn_model.joblib"
+            "knn_model.pkl"
         )
 
         result = make_prediction(
@@ -704,4 +705,62 @@ def predict_naivebayes(data: NetworkData):
 
             "error": str(e)
 
+        }
+
+@app.post("/predict/logistic")
+def predict_logistic(data: NetworkData):
+
+    try:
+
+        scaled_input = preprocess_hybrid(
+            data
+        )
+
+        logistic_model = joblib.load(
+            "logistic_regression_model.pkl"
+        )
+
+        result = make_prediction(
+            logistic_model,
+            scaled_input
+        )
+
+        del logistic_model
+        import gc; gc.collect()
+
+        return result
+
+    except Exception as e:
+
+        return {
+            "error": str(e)
+        }
+
+@app.post("/predict/mlp")
+def predict_mlp(data: NetworkData):
+
+    try:
+
+        scaled_input = preprocess_hybrid(
+            data
+        )
+
+        mlp_model = load_model(
+            "mlp_ids_model.keras"
+        )
+
+        result = make_keras_prediction(
+            mlp_model,
+            scaled_input
+        )
+
+        del mlp_model
+        import gc; gc.collect()
+
+        return result
+
+    except Exception as e:
+
+        return {
+            "error": str(e)
         }
