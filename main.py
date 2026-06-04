@@ -187,7 +187,7 @@ def preprocess_hybrid(data):
     )
 
     scaled_input = scaler.transform(
-        input_df
+        input_df.values
     )
 
     scaled_input = scaled_input.astype(
@@ -570,7 +570,7 @@ def predict_cnn(data: NetworkData):
 
         # Scale features (expects 120 features input)
         scaled_input = scaler.transform(
-            tree_input
+            tree_input.values
         )
 
         # Convert to DataFrame to reindex to exactly the 118 columns CNN expects
