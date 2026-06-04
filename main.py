@@ -15,7 +15,15 @@ from catboost import CatBoostClassifier
 # =========================================================
 
 scaler = joblib.load(
+    "scaler.pkl"
+)
+
+standard_scaler = joblib.load(
     "standard_scaler.pkl"
+)
+
+linear_feature_columns = joblib.load(
+    "linear_feature_columns.pkl"
 )
 
 label_encoder = joblib.load(
@@ -195,6 +203,23 @@ def preprocess_hybrid(data):
     )
 
     return scaled_input
+
+# =========================================================
+# LINEAR MODEL PREPROCESSING
+# =========================================================
+
+def preprocess_linear(data):
+    input_df = pd.DataFrame([data.dict()])
+    input_df = pd.get_dummies(input_df)
+    
+    # Match the 119 Training Columns from the new Linear Models notebook
+    input_df = input_df.reindex(columns=linear_feature_columns, fill_value=0)
+    
+    # Scale only the first 38 numerical features
+    numerical_cols = linear_feature_columns[:38]
+    input_df[numerical_cols] = standard_scaler.transform(input_df[numerical_cols].values)
+    
+    return input_df.values.astype(np.float32)
 
 # =========================================================
 # GENERIC PREDICTION FUNCTION
@@ -626,7 +651,7 @@ def predict_knn(data: NetworkData):
 
     try:
 
-        scaled_input = preprocess_hybrid(
+        scaled_input = preprocess_linear(
             data
         )
 
@@ -662,7 +687,7 @@ def predict_svm(data: NetworkData):
 
     try:
 
-        scaled_input = preprocess_hybrid(
+        scaled_input = preprocess_linear(
             data
         )
 
@@ -687,7 +712,7 @@ def predict_naivebayes(data: NetworkData):
 
     try:
 
-        scaled_input = preprocess_hybrid(
+        scaled_input = preprocess_linear(
             data
         )
 
@@ -712,7 +737,7 @@ def predict_logistic(data: NetworkData):
 
     try:
 
-        scaled_input = preprocess_hybrid(
+        scaled_input = preprocess_linear(
             data
         )
 
@@ -741,7 +766,7 @@ def predict_mlp(data: NetworkData):
 
     try:
 
-        scaled_input = preprocess_hybrid(
+        scaled_input = preprocess_linear(
             data
         )
 
